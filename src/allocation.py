@@ -110,9 +110,8 @@ def initialize_population(data, population_size):
     for _ in range(population_size):
         schedule = {}
         for patient in data["patients"]:
-            assigned_ward = random.choice(list(data["wards"].keys()))
             assigned_day = random.randint(patient["earliest_admission"], patient["latest_admission"])
-            schedule[patient["patient_id"]] = (assigned_ward, assigned_day)
+            schedule[patient["patient_id"]] = (patient["specialization"], assigned_day, patient["length_of_stay"])
         population.append(schedule)
     return population
 
@@ -120,9 +119,9 @@ def fitness(schedule, data):
     cost = 0
     workload = {ward: [0] * data["days"] for ward in data["wards"]}
     
-    for patient_id, (ward, day) in schedule.items():
+    for patient_id, (ward, day, stay) in schedule.items():
         patient = next(p for p in data["patients"] if p["patient_id"] == patient_id)
-        for d in range(patient["length_of_stay"]):
+        for d in range(stay):
             if day + d < data["days"]:
                 workload[ward][day + d] += patient["workload_per_day"][d]
     
@@ -145,7 +144,8 @@ def genetic_algorithm(data, population_size=50, generations=100, mutation_rate=0
             child = {**dict(list(parent1.items())[:len(parent1)//2]), **dict(list(parent2.items())[len(parent2)//2:])}
             if random.random() < mutation_rate:
                 patient_id = random.choice(list(child.keys()))
-                child[patient_id] = (random.choice(list(data["wards"].keys())), random.randint(0, data["days"] - 1))
+                patient = next(p for p in data["patients"] if p["patient_id"] == patient_id)
+                child[patient_id] = (random.choice(list(data["wards"].keys())), random.randint(0, data["days"] - 1), patient["length_of_stay"])
             new_population.append(child)
         population = new_population
     
@@ -161,6 +161,7 @@ table = Table(title="\n[bold blue]Patient Schedule[/bold blue]")
 table.add_column("Patient ID", justify="center")
 table.add_column("Ward", justify="center")
 table.add_column("Admission Day", justify="center")
-for patient, (ward, day) in best_schedule.items():
-    table.add_row(patient, ward, str(day))
+table.add_column("Length of Stay", justify="center")
+for patient, (ward, day, stay) in best_schedule.items():
+    table.add_row(patient, ward, str(day), str(stay))
 console.print(table)
