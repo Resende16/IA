@@ -1,8 +1,13 @@
+
+import pandas as pd
 import re
 
-def parse_file(file_path):
+def parse_instance_file(file_path):
     data = {
-        "parameters": {},
+        "seed": None,
+        "minor_specialisms_per_ward": None,
+        "weights": {},
+        "days": None,
         "specialisms": {},
         "wards": {},
         "patients": []
@@ -11,60 +16,84 @@ def parse_file(file_path):
     with open(file_path, 'r') as file:
         lines = file.readlines()
     
-    data["parameters"] = {
-        "Seed": int(lines[0].split(':')[1]),
-        "M": int(lines[1].split(':')[1]),
-        "Weight_overtime": float(lines[2].split(':')[1]),
-        "Weight_undertime": float(lines[3].split(':')[1]),
-        "Weight_delay": float(lines[4].split(':')[1]),
-        "Days": int(lines[5].split(':')[1]),
-        "Specialisms": int(lines[6].split(':')[1])
+    index = 0
+    data["seed"] = int(re.findall(r'\d+', lines[index])[0])
+    index += 1
+    data["minor_specialisms_per_ward"] = int(lines[index].strip())
+    index += 1
+    
+    # Read weights
+    data["weights"] = {
+        "overtime": float(lines[index].split(': ')[-1]),
+        "undertime": float(lines[index + 1].split(': ')[-1]),
+        "delay": float(lines[index + 2].split(': ')[-1])
     }
+    index += 3
     
-    idx = 7
-    for _ in range(data["parameters"]["Specialisms"]):
-        parts = lines[idx].split('\t')
-        name = parts[0]
-        factor = float(parts[1])
-        values = list(map(int, parts[2].split(';')))
-        data["specialisms"][name] = {"factor": factor, "values": values}
-        idx += 1
+    # Read days
+    data["days"] = int(lines[index].split(': ')[-1])
+    index += 1
     
-    num_wards = int(lines[idx].split(':')[1])
-    idx += 1
+    # Read specialisms
+    num_specialisms = int(lines[index].split(': ')[-1])
+    index += 1
+    for _ in range(num_specialisms):
+        parts = lines[index].strip().split()
+        spec_id = parts[0]
+        workload_factor = float(parts[1])
+        ot_time = list(map(int, parts[2].split(';')))
+        data["specialisms"][spec_id] = {"workload_factor": workload_factor, "ot_time": ot_time}
+        index += 1
+    
+    # Read wards
+    num_wards = int(lines[index].split(': ')[-1])
+    index += 1
     for _ in range(num_wards):
-        parts = lines[idx].split('\t')
-        name, capacity, _, spec, relations, rel_values = parts
-        capacity = int(capacity)
-        relations = relations.split(';')
-        rel_values = list(map(float, rel_values.split(';')))
-        data["wards"][name] = {
-            "capacity": capacity,
-            "specialism": spec,
-            "relations": {relations[i]: rel_values[i] for i in range(len(relations))}
+        parts = lines[index].strip().split()
+        ward_id = parts[0]
+        bed_capacity = int(parts[1])
+        workload_capacity = float(parts[2])
+        major_specialization = parts[3]
+        minor_specializations = parts[4] if parts[4] != "NONE" else []
+        carryover_patients = list(map(int, parts[5].split(';')))
+        carryover_workload = list(map(float, parts[6].split(';')))
+        
+        data["wards"][ward_id] = {
+            "bed_capacity": bed_capacity,
+            "workload_capacity": workload_capacity,
+            "major_specialization": major_specialization,
+            "minor_specializations": minor_specializations,
+            "carryover_patients": carryover_patients,
+            "carryover_workload": carryover_workload
         }
-        idx += 1
+        index += 1
     
-    num_patients = int(lines[idx].split(':')[1])
-    idx += 1
+    # Read patients
+    num_patients = int(lines[index].split(': ')[-1])
+    index += 1
     for _ in range(num_patients):
-        parts = lines[idx].split('\t')
+        parts = lines[index].strip().split()
         patient_id = parts[0]
-        spec, admit, start, duration, severity, factors = parts[1:]
-        factors = list(map(float, factors.split(';')))
+        specialization = parts[1]
+        earliest_admission = int(parts[2])
+        latest_admission = int(parts[3])
+        length_of_stay = int(parts[4])
+        surgery_duration = int(parts[5])
+        workload_per_day = list(map(float, parts[6].split(';')))
+        
         data["patients"].append({
-            "id": patient_id,
-            "specialism": spec,
-            "admit_day": int(admit),
-            "start_day": int(start),
-            "duration": int(duration),
-            "severity": int(severity),
-            "factors": factors
+            "patient_id": patient_id,
+            "specialization": specialization,
+            "earliest_admission": earliest_admission,
+            "latest_admission": latest_admission,
+            "length_of_stay": length_of_stay,
+            "surgery_duration": surgery_duration,
+            "workload_per_day": workload_per_day
         })
-        idx += 1
+        index += 1
     
     return data
 
-# data = parse_file("/mnt/data/s1m3.dat")
-# print(data)  
-
+file_path = "s0m0.dat"  
+data = parse_instance_file(file_path)
+print(data)  
