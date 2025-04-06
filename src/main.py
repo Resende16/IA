@@ -1,6 +1,6 @@
 from rich.console import Console
 from parser import parse_instance_file
-from utils import print_schedule
+from utils import print_schedule, calculate_fitness
 from genetic_algorithm import genetic_algorithm
 from hill_climbing import hill_climbing
 from simulated_annealing import simulated_annealing
@@ -35,4 +35,8 @@ if __name__ == "__main__":
         best_schedule = tabu_search(data)
 
     if 'best_schedule' in locals():
+        # Calculate and display the fitness value
+        fitness_value = calculate_fitness(best_schedule, data)
+        console.print(f"[bold green]Fitness value: {fitness_value}[/bold green]")
         print_schedule(best_schedule, data)
+    

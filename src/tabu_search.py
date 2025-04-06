@@ -43,5 +43,5 @@ def tabu_search(data, max_iterations=500, tabu_size=50, neighbors_per_iter=30):
         if current_fitness > best_fitness:
             best = current
             best_fitness = current_fitness
-
+        
     return best
