@@ -2,6 +2,8 @@ import random
 import math
 from rich.console import Console
 from rich.table import Table
+from collections import deque
+from datetime import datetime
 import re
 
 console = Console()
@@ -206,19 +208,92 @@ def genetic_algorithm(data, population_size=50, generations=100, mutation_rate=0
     
     return max(population, key=lambda s: calculate_fitness(s, data))
 
-def hill_climbing(data, max_iterations=1000):
+def hill_climbing(data, max_iterations=500, neighbors_per_iter=20):
     current = initialize_population(data, 1)[0]
     current_fitness = calculate_fitness(current, data)
 
-    for i in range(max_iterations):
-        neighbor = mutate(current, data, mutation_rate=0.2)
-        neighbor_fitness = calculate_fitness(neighbor, data)
+    for _ in range(max_iterations):
+        best_neighbor = None
+        best_fitness = float('-inf')
 
-        if neighbor_fitness > current_fitness:
-            current = neighbor
-            current_fitness = neighbor_fitness
+        for _ in range(neighbors_per_iter):
+            neighbor = mutate(current, data, mutation_rate=0.2)
+            fitness = calculate_fitness(neighbor, data)
+            if fitness > best_fitness:
+                best_fitness = fitness
+                best_neighbor = neighbor
+
+        if best_fitness > current_fitness:
+            current = best_neighbor
+            current_fitness = best_fitness
+        else:
+            break
 
     return current
+
+
+
+def simulated_annealing(data, initial_temp=1000.0, final_temp=0.1, alpha=0.95, max_iter_per_temp=100):
+    current = initialize_population(data, 1)[0]
+    current_fitness = calculate_fitness(current, data)
+    best = current
+    best_fitness = current_fitness
+    temperature = initial_temp
+
+    while temperature > final_temp:
+        for _ in range(max_iter_per_temp):
+            neighbor = mutate(current, data, mutation_rate=0.2)
+            neighbor_fitness = calculate_fitness(neighbor, data)
+            delta = neighbor_fitness - current_fitness
+
+            if delta > 0 or random.random() < math.exp(delta / temperature):
+                current = neighbor
+                current_fitness = neighbor_fitness
+
+                if current_fitness > best_fitness:
+                    best = current
+                    best_fitness = current_fitness
+
+        temperature *= alpha
+
+    return best
+
+
+
+def tabu_search(data, max_iterations=500, tabu_size=50, neighbors_per_iter=30):
+    current = initialize_population(data, 1)[0]
+    current_fitness = calculate_fitness(current, data)
+    best = current
+    best_fitness = current_fitness
+
+    tabu_list = deque(maxlen=tabu_size)
+
+    for iteration in range(max_iterations):
+        neighbors = []
+        
+        for _ in range(neighbors_per_iter):
+            neighbor = mutate(current, data, mutation_rate=0.2)
+            neighbor_hash = hash(frozenset(neighbor.items()))
+            
+            if neighbor_hash not in tabu_list:
+                fitness = calculate_fitness(neighbor, data)
+                neighbors.append((neighbor, fitness, neighbor_hash))
+
+        if not neighbors:
+            break
+
+        neighbor, neighbor_fitness, neighbor_hash = max(neighbors, key=lambda x: x[1])
+
+        current = neighbor
+        current_fitness = neighbor_fitness
+        tabu_list.append(neighbor_hash)
+
+        if current_fitness > best_fitness:
+            best = current
+            best_fitness = current_fitness
+
+    return best
+
 
 
 def print_schedule(schedule, data):
@@ -287,18 +362,13 @@ if __name__ == "__main__":
 
     if choice == "1":
         best_schedule = genetic_algorithm(data)
-        console.print("[green]Genetic Algorithm executado com sucesso![/green]")
     elif choice == "2":
-        console.print("[yellow]Hill Climbing ainda não implementado.[/yellow]")
         best_schedule = hill_climbing(data)
     elif choice == "3":
-        console.print("[yellow]Simulated Annealing ainda não implementado.[/yellow]")
-        # best_schedule = simulated_annealing(data)
+        best_schedule = simulated_annealing(data)
     elif choice == "4":
-        console.print("[yellow]Tabu Search ainda não implementado.[/yellow]")
-        # best_schedule = tabu_search(data)
+        best_schedule = tabu_search(data)
 
-    # Se o algoritmo foi executado (apenas se tiver um schedule válido):
     if 'best_schedule' in locals():
         print_schedule(best_schedule, data)
 
