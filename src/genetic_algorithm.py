@@ -2,6 +2,9 @@
 import random
 from utils import calculate_fitness, initialize_population, mutate
 
+
+# Função que a partir de dois calendários pai retornará um calendário filho, ou seja para cada paciente atribui um dia de cada calendário pai
+
 def crossover(parent1, parent2, data):
     child = {}
     for patient in data["patients"]:
@@ -11,6 +14,11 @@ def crossover(parent1, parent2, data):
         else:
             child[pid] = parent2[pid]
     return child
+
+
+# Algoritmo para a alocação de pacientes, que vai retornar o melhor calendario possivel
+# O algoritmo vai ser executado para um numero fixo de gereções
+# A população vai ser ordenada de acordo com o fitness e por ordem decrescente
 
 def genetic_algorithm(data, population_size=50, generations=100, mutation_rate=0.1):
     population = initialize_population(data, population_size)
@@ -33,4 +41,6 @@ def genetic_algorithm(data, population_size=50, generations=100, mutation_rate=0
         
         population = new_population
     
+    # Retorna o melhor com base no fitness
+
     return max(population, key=lambda s: calculate_fitness(s, data))
