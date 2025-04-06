@@ -1,5 +1,3 @@
-
-import pandas as pd
 import re
 
 def parse_instance_file(file_path):
@@ -19,7 +17,7 @@ def parse_instance_file(file_path):
     index = 0
     data["seed"] = int(re.findall(r'\d+', lines[index])[0])
     index += 1
-    data["minor_specialisms_per_ward"] = int(lines[index].strip())
+    data["minor_specialisms_per_ward"] = int(re.findall(r'\d+', lines[index])[0])
     index += 1
     
     # Read weights
@@ -93,7 +91,3 @@ def parse_instance_file(file_path):
         index += 1
     
     return data
-
-file_path = "s0m0.dat"  
-data = parse_instance_file(file_path)
-print(data)  
