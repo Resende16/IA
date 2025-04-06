@@ -8,9 +8,13 @@ from tabu_search import tabu_search
 
 console = Console()
 
-if __name__ == "__main__":
-    data = parse_instance_file("../database/instances/s1m2.dat") 
+# A main function importa todas as outras funções, sendo elas o parser para ler os valores e todos os algoritmos.
+# Além disso, dispõe de um menu que é imprimido no terminal, onde é possivel fazer a escolha do algoritmo para fazer o scheduling.
 
+if __name__ == "__main__":
+    # Aqui escolhemos a instância que vamos analisar e fazer o schedule
+    data = parse_instance_file("../database/instances/s6m3.dat") 
+    # Aqui escolhemos o algoritmo que vamos usar para fazer o schedule
     console.print("[bold cyan]Escolhe o algoritmo que queres executar:[/bold cyan]")
     console.print("1 - Genetic Algorithm")
     console.print("2 - Hill Climbing")
@@ -20,7 +24,7 @@ if __name__ == "__main__":
     choice = None
     while choice not in {"1", "2", "3", "4"}:
         choice = input("Algoritmo: ").strip()
-
+    # Aqui executamos o algoritmo escolhido pelo user, para os dados da instancia que estamos a analisar
     if choice == "1":
         best_schedule = genetic_algorithm(data)
     elif choice == "2":

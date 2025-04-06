@@ -1,6 +1,8 @@
 import re
 
-def parse_instance_file(file_path):
+# Esta função serve para analisar a instancia selecionada no codigo main.py e, obviamente extrair todos os dados necessários.
+
+def parse_instance_file(file_path): # O file_path é o caminho para o arquivo que contém a instancia
     data = {
         "seed": None,
         "minor_specialisms_per_ward": None,
@@ -11,6 +13,8 @@ def parse_instance_file(file_path):
         "patients": []
     }
     
+    # Aqui abrimos o ficheiro para ler todas as linhas
+
     with open(file_path, 'r') as file:
         lines = file.readlines()
     
@@ -20,7 +24,7 @@ def parse_instance_file(file_path):
     data["minor_specialisms_per_ward"] = int(re.findall(r'\d+', lines[index])[0])
     index += 1
     
-    # Read weights
+    # Pesos
     data["weights"] = {
         "overtime": float(lines[index].split(': ')[-1]),
         "undertime": float(lines[index + 1].split(': ')[-1]),
@@ -28,11 +32,11 @@ def parse_instance_file(file_path):
     }
     index += 3
     
-    # Read days
+    # Dias
     data["days"] = int(lines[index].split(': ')[-1])
     index += 1
     
-    # Read specialisms
+    # Especialidades
     num_specialisms = int(lines[index].split(': ')[-1])
     index += 1
     for _ in range(num_specialisms):
@@ -43,7 +47,7 @@ def parse_instance_file(file_path):
         data["specialisms"][spec_id] = {"workload_factor": workload_factor, "ot_time": ot_time}
         index += 1
     
-    # Read wards
+    # Wards
     num_wards = int(lines[index].split(': ')[-1])
     index += 1
     for _ in range(num_wards):
@@ -66,7 +70,7 @@ def parse_instance_file(file_path):
         }
         index += 1
     
-    # Read patients
+    # Pacientes
     num_patients = int(lines[index].split(': ')[-1])
     index += 1
     for _ in range(num_patients):
@@ -91,3 +95,4 @@ def parse_instance_file(file_path):
         index += 1
     
     return data
+
