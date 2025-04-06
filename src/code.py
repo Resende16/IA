@@ -206,6 +206,21 @@ def genetic_algorithm(data, population_size=50, generations=100, mutation_rate=0
     
     return max(population, key=lambda s: calculate_fitness(s, data))
 
+def hill_climbing(data, max_iterations=1000):
+    current = initialize_population(data, 1)[0]
+    current_fitness = calculate_fitness(current, data)
+
+    for i in range(max_iterations):
+        neighbor = mutate(current, data, mutation_rate=0.2)
+        neighbor_fitness = calculate_fitness(neighbor, data)
+
+        if neighbor_fitness > current_fitness:
+            current = neighbor
+            current_fitness = neighbor_fitness
+
+    return current
+
+
 def print_schedule(schedule, data):
     allocation_grid = {
         ward: {
@@ -275,7 +290,7 @@ if __name__ == "__main__":
         console.print("[green]Genetic Algorithm executado com sucesso![/green]")
     elif choice == "2":
         console.print("[yellow]Hill Climbing ainda não implementado.[/yellow]")
-        # best_schedule = hill_climbing(data)
+        best_schedule = hill_climbing(data)
     elif choice == "3":
         console.print("[yellow]Simulated Annealing ainda não implementado.[/yellow]")
         # best_schedule = simulated_annealing(data)
