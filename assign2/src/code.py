@@ -72,7 +72,11 @@ df = df.drop('employee_id', axis=1)
 X = df.drop('is_promoted', axis=1)
 y = df['is_promoted']
 
+# Stratify é necessário porque o dataset está desiquilibrado (apenas 9% promoted)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+
+#Pré-Processamento -> Definimos o tratamento de dados e como as variaveis vao ser transformadas!!
 
 numerical_transformer = Pipeline(steps=[
     ('imputer', SimpleImputer(strategy='median')),
@@ -92,17 +96,24 @@ preprocessor = ColumnTransformer(
 
 
 models = {
+    # Decision Tree que vai tomar decisoes binarias (if/else) em cada feature
     'Decision Tree': DecisionTreeClassifier(random_state=42),
+
+    # k-NN classifica com base nos k mais proximo no dataset, por isso é que demora mais (quantos mais dados mais lento é)
+    #Neste caso muitos dados por isso fica muito lento (cerca de 30 segundos)
     'k-NN': KNeighborsClassifier(),
+
+    # Modelo linear e com base em probabilidades
     'Logistic Regression': LogisticRegression(random_state=42, max_iter=1000)
 }
 
 results = {
     'Model': [],
     'Accuracy': [],
-    'Precision': [],
-    'Recall': [],
-    'F1 Score': [],
+    'Precision': [], # Dos que o modelo promoveu quantos foram mesmo promovidos (precisão)
+    'Recall': [], # Dos que foram mesmo promovidos quantos o modelo identificou (sensibilidade)
+    # O Recall vai ser muito importante para evitar falsos negativos no fundo
+    'F1 Score': [], # Tem em conta precision e recall (importante para estes datasets desiquilibrados)
     'ROC AUC': [],
     'Training Time (s)': [],
     'Prediction Time (s)': []
