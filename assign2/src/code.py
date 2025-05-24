@@ -1,9 +1,8 @@
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split, GridSearchCV, learning_curve
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -11,7 +10,6 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, roc_curve, auc, classification_report, roc_auc_score)
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 import time
 import warnings
@@ -33,7 +31,9 @@ plt.ylabel('Count')
 plt.show()
 
 promoted_percentage = df['is_promoted'].value_counts(normalize=True) * 100
-print(f"\nPromotion percentage:\n{promoted_percentage}")
+console.print(f"\n========== Promotion percentage ==========\n", style="bold blue")
+print(f"Promoted: {promoted_percentage[1]:.2f}%")
+print(f"Not Promoted: {promoted_percentage[0]:.2f}%\n")
 
 numerical_cols = ['no_of_trainings', 'age', 'previous_year_rating', 
                   'length_of_service', 'avg_training_score']
@@ -191,83 +191,16 @@ plt.title('Prediction Time Comparison')
 plt.tight_layout()
 plt.show()
 
-final_model = Pipeline(steps=[
-    ('preprocessor', preprocessor),
-    ('model', RandomForestClassifier(
-        random_state=42,
-        n_estimators=200,
-        max_depth=20,
-        min_samples_split=5,
-        min_samples_leaf=2
-    ))
-])
-
-plt.figure(figsize=(10, 6))
-train_sizes, train_scores, test_scores = learning_curve(
-    final_model, X_train, y_train, cv=5, 
-    scoring='f1', n_jobs=-1,
-    train_sizes=np.linspace(0.1, 1.0, 10))
-
-train_mean = np.mean(train_scores, axis=1)
-train_std = np.std(train_scores, axis=1)
-test_mean = np.mean(test_scores, axis=1)
-test_std = np.std(test_scores, axis=1)
-
-plt.plot(train_sizes, train_mean, 'o-', color='r', label='Training score')
-plt.plot(train_sizes, test_mean, 'o-', color='g', label='Cross-validation score')
-plt.fill_between(train_sizes, train_mean - train_std, train_mean + train_std, alpha=0.1, color='r')
-plt.fill_between(train_sizes, test_mean - test_std, test_mean + test_std, alpha=0.1, color='g')
-
-plt.title('Learning Curves for Random Forest')
-plt.xlabel('Training examples')
-plt.ylabel('F1 Score')
-plt.legend(loc='best')
-plt.grid()
-plt.show()
-
-final_model.fit(X_train, y_train)
-
-y_pred_final = final_model.predict(X_test)
-y_proba_final = final_model.predict_proba(X_test)[:, 1]
-
-console.print("\n========== Final Model Evaluation ==========", style="bold blue")
-print(classification_report(y_test, y_pred_final))
-print(f"ROC AUC Score: {roc_auc_score(y_test, y_proba_final):.4f}")
-
-cm = confusion_matrix(y_test, y_pred_final)
-plt.figure(figsize=(6, 4))
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-            xticklabels=['Not Promoted', 'Promoted'],
-            yticklabels=['Not Promoted', 'Promoted'])
-plt.title('Final Confusion Matrix - Random Forest')
-plt.ylabel('Actual')
-plt.xlabel('Predicted')
-plt.show()
-
-fpr, tpr, _ = roc_curve(y_test, y_proba_final)
-roc_auc = auc(fpr, tpr)
-
-plt.figure(figsize=(8, 6))
-plt.plot(fpr, tpr, color='darkorange', lw=2, 
-         label=f'ROC curve (area = {roc_auc:.2f})')
-plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-plt.xlim([0.0, 1.0])
-plt.ylim([0.0, 1.05])
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-plt.title('Final ROC Curve - Random Forest')
-plt.legend(loc="lower right")
-plt.show()
-
-console.print("\n========== Some Compare Graphics ==========", style="bold blue")
+console.print("\n========== Some Comparison Graphics ==========", style="bold blue")
 
 metrics_to_plot = ['Accuracy', 'Precision', 'Recall', 'F1 Score', 'ROC AUC']
 
 for metric in metrics_to_plot:
     pltx.clear_figure()
-    pltx.title(f"Compare Models - {metric}")
+    pltx.title(f"Model Comparison - {metric}")
     pltx.bar(results_df['Model'].tolist(), results_df[metric].tolist())
     pltx.xlabel("Models")
     pltx.ylabel(metric)
     pltx.plotsize(100, 20)
     pltx.show()
+    print("\n\n")
